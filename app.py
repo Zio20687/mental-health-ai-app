@@ -1,4 +1,5 @@
 import streamlit as st
+import mental_health_resources 
 from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
@@ -39,10 +40,10 @@ def recommend_music(level, age_group, gender):
             raise
 
 # 分頁
-tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "📷 臉部辨識評估"])
+tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "💖 心衛資源"])
 
 with tab1:
-    st.title("心理健康評估音樂推薦 與 AI 心理諮詢")
+    st.title("📝心理健康評估 及 音樂推薦")
 
     age_group = st.selectbox("請選擇您的年齡範圍：", ["請選擇", "14歲(含)以下", "15~24歲", "25~44歲", "45~64歲", "65歲(含)以上"])
     gender = st.selectbox("請選擇您的性別：", ["請選擇", "男", "女"])
@@ -140,11 +141,19 @@ with tab1:
             if st.button("獲取心理資源建議"):
                 st.markdown("""
                 ### ❤️ 緊急心理資源建議
-                我很抱歉，你現在的情況我無法提供足夠的幫助。請撥打下列專線：
+                我很抱歉，你現在的情況我無法提供足夠的幫助。請撥打下列專線或利用以下資源：
 
                 📞 台灣自殺防治中心：0800-788-995  
                 📞 生命線協談專線：1995  
-
+                 
+                 #### 🎓 學校心理輔導資源
+                 - **僑光科大諮商輔導中心**  
+                 僑光科大諮商輔導中心網頁:[https://scc.ocu.edu.tw/index.php?Lang=zh-tw](https://scc.ocu.edu.tw/index.php?Lang=zh-tw)
+                 可免費提供學生心理諮詢、情緒調適團體與危機處遇。
+  
+                 你可以透過以下網址預約心理諮詢服務：  
+                 👉[報名預約心理諮商](http://counseling.ocu.edu.tw/index.aspx)     
+                                    
                 請記得：你並不孤單，很多人願意幫助你。
                 """)
         else:
@@ -179,11 +188,16 @@ with tab2:
             )
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
+#心衛資源
+with tab3:
+    st.subheader("💖 心衛資源")
+    st.markdown(mental_health_resources.resources_markdown)
+
 
 # 頁尾
 st.markdown("""
 ---
 <div style='text-align: center; color: gray;'>
-    本網頁僅供學術研究
+    。本網頁僅供僑光科大資科系學術研究，結果僅供參考。
 </div>
 """, unsafe_allow_html=True)
