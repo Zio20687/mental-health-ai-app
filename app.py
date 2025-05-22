@@ -224,6 +224,6 @@ st.markdown("""
     。本網頁僅供僑光科大資科系學術研究，結果僅供參考。
 </div>
 <div style='text-align: center; color: gray;'>
-    。表單來源來自社團法人台灣自殺防治學會。
+    。表單來源來自社團法人台灣自殺防治學會，哈哈。
 </div>
 """, unsafe_allow_html=True)
