@@ -202,7 +202,7 @@ with tab2:
             st.markdown(prompt)
         with st.chat_message("assistant"):
             stream = client.chat.completions.create(
-               model="gpt-4o",
+               model="gpt-4",
                messages=[
                {"role": "system", "content": construct_psych_context()}
                ] + st.session_state.messages,
