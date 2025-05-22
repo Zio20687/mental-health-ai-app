@@ -39,6 +39,26 @@ def recommend_music(level, age_group, gender):
             st.error(f"發生錯誤：{e}")
             raise
 
+def construct_psych_context():
+    if all(k in st.session_state for k in ["level", "age_group", "gender", "responses", "total_score"]):
+        intro = (
+            f"使用者的心理健康評估結果如下：\n"
+            f"- 年齡範圍：{st.session_state['age_group']}\n"
+            f"- 性別：{st.session_state['gender']}\n"
+            f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
+            f"使用者在評估中對情緒問題的回覆如下：\n"
+        )
+        for q, a in st.session_state['responses'].items():
+            intro += f"  - {q}：{a}\n"
+        intro += "\n你是一位專業的心理輔導助理，只能針對心理健康、情緒支持、壓力管理等問題提供回應。如果使用者問到無關的問題（例如投資、電影、數學等），請禮貌地回應「請針對心理相關議題發問，我會很樂意協助您。」"
+        return intro
+    else:
+        return (
+            "你是一位專業的心理輔導助理。請根據使用者的情緒狀態提供心理健康、壓力釋放、情緒支持等方面的回應。"
+            "請避免回答與心理無關的問題，例如財經、遊戲、程式、電腦操作等。"
+        )
+
+
 # 分頁
 tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "💖 心衛資源"])
 
@@ -182,10 +202,13 @@ with tab2:
             st.markdown(prompt)
         with st.chat_message("assistant"):
             stream = client.chat.completions.create(
-                model="gpt-4o",
-                messages=st.session_state.messages,
-                stream=True
+               model="gpt-4o",
+               messages=[
+               {"role": "system", "content": construct_psych_context()}
+               ] + st.session_state.messages,
+               stream=True
             )
+
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
 #心衛資源
