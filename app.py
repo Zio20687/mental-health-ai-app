@@ -62,6 +62,12 @@ def construct_psych_context():
 
 # 分頁
 tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "💖 心衛資源"])
+# 讓 tab 對應變數，方便後續控制
+tab_dict = {
+    "tab1": tab1,
+    "tab2": tab2,
+    "tab3": tab3,
+}
 
 with tab1:
     st.title("📝心理健康評估 及 音樂推薦")
@@ -157,7 +163,11 @@ with tab1:
                 except Exception as e:
                     st.error(f"❌ 郵件寄送失敗：{e}")
                     raise
-
+                    
+if st.button("👉 前往 AI 心理諮詢"):
+    st.experimental_set_query_params(tab="tab2")
+    st.rerun()
+        
         if score_mapping[st.session_state["responses"]["過去一星期，是否有自殺的想法？"]] >= 2 or st.session_state["total_score"] >= 10:
             if st.button("獲取心理資源建議"):
                 st.markdown("""
