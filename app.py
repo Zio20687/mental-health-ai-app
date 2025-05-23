@@ -157,6 +157,7 @@ with tab1:
                     st.error(f"❌ 郵件寄送失敗：{e}")
                     raise
                     
+                    
         
         if score_mapping[st.session_state["responses"]["過去一星期，是否有自殺的想法？"]] >= 2 or st.session_state["total_score"] >= 10:
             if st.button("獲取心理資源建議"):
