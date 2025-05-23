@@ -208,6 +208,16 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     st.session_state.messages.append({
         "role": "user", 
         "content": intro
+        with st.chat_message("user"):
+            st.markdown(intro)
+        with st.chat_message("assistant"):
+            stream = client.chat.completions.create(
+               model="gpt-4",
+               messages=[
+               {"role": "system", "content": construct_psych_context()}
+               ] + st.session_state.messages,
+               stream=True
+            )
     })
     st.session_state.auto_intro_sent = True
 
