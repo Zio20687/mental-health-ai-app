@@ -120,7 +120,6 @@ with tab1:
             st.markdown(f"### 狀態建議：**{level}**")
 
     if total_score > 10:
-            from openai import OpenAI
             try:
                 client = get_openai_client()
 
