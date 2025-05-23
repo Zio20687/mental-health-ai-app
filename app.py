@@ -58,6 +58,7 @@ def construct_psych_context():
             "你是一位專業的心理輔導助理。請根據使用者的情緒狀態提供心理健康、壓力釋放、情緒支持等方面的回應。"
             "請避免回答與心理無關的問題，例如財經、遊戲、程式、電腦操作、編寫程式碼等。"
         )
+    
 
 # 分頁
 tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "💖 心衛資源"])
@@ -258,24 +259,28 @@ if "total_score" in st.session_state:
                     st.warning("請輸入正確的 Gmail。")
 
 
-# AI 心理諮詢
 with tab2:
     st.subheader("🤖 AI 心理諮詢")
 
-    # 顯示訊息
     if "messages" not in st.session_state:
         st.session_state.messages = []
-    for m in st.session_state.messages:
-        with st.chat_message(m["role"]):
-            st.markdown(m["content"])
 
-    # ⬇️ 自動觸發 GPT 心理建議
+    chat_container = st.container()
+    input_container = st.container()
+
+    # ✅ 顯示歷史訊息
+    with chat_container:
+        for m in st.session_state.messages:
+            with st.chat_message(m["role"]):
+                st.markdown(m["content"])
+
+    # ✅ 自動觸發 GPT 心理建議
     if (
-        "auto_intro_sent" in st.session_state
-        and st.session_state.auto_intro_sent
-        and not any(m["content"].startswith("根據您的心理健康評估") for m in st.session_state.messages)
+        "auto_intro_sent" in st.session_state and
+        st.session_state.auto_intro_sent and
+        not any("請根據上述心理健康評估結果" in m["content"] for m in st.session_state.messages)
     ):
-        with st.chat_message("assistant"):
+        with chat_container.chat_message("assistant"):
             stream = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -290,21 +295,34 @@ with tab2:
             "content": response
         })
 
-    # ⬇️ 使用者輸入處理
-    if prompt := st.chat_input("請輸入您的感受..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        with st.chat_message("assistant"):
-            stream = client.chat.completions.create(
-               model="gpt-4",
-               messages=[
-                   {"role": "system", "content": construct_psych_context()}
-               ] + st.session_state.messages,
-               stream=True
-            )
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+    # ✅ 使用者輸入區域永遠固定在底部
+    with input_container:
+        prompt = st.chat_input("請輸入您的感受...")
+        if prompt:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with chat_container.chat_message("user"):
+                st.markdown(prompt)
+
+            with chat_container.chat_message("assistant"):
+                stream = client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": construct_psych_context()}
+                    ] + st.session_state.messages,
+                    stream=True
+                )
+                response = st.write_stream(stream)
+
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response
+            })
+
+
+
+
+
+
 
 
 #心衛資源
