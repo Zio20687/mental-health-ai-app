@@ -206,7 +206,7 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
 
     # 加入第一則系統訊息
     st.session_state.messages.append({
-        "role": "user", 
+        "role": "assistant", 
         "content": intro
     })
 
