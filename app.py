@@ -216,7 +216,7 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "你是一位溫柔的心理諮詢師，請根據使用者的心理健康摘要提供同理、接納並引導對話的開場白。"},
-                {"role": "user", "content": intro}
+                {"role": "assistant", "content": intro}
             ]
         )
 
