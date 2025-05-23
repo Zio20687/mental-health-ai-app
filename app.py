@@ -217,26 +217,6 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     })
 
     st.session_state.auto_intro_sent = True
-# 自動回覆心理建議（在 auto_intro_sent 和訊息送出後觸發）
-if (
-    "auto_intro_sent" in st.session_state
-    and st.session_state.auto_intro_sent
-    and not any(m["content"].startswith("根據您的心理健康評估") for m in st.session_state.messages)
-):
-    with st.chat_message("assistant"):
-        stream = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": construct_psych_context()}
-            ] + st.session_state.messages,
-            stream=True
-        )
-        response = st.write_stream(stream)
-
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": response
-    })
 
 # 若為中度或重度患者，顯示 Gmail 填寫表單並寄信
 if "total_score" in st.session_state:
@@ -280,11 +260,36 @@ if "total_score" in st.session_state:
 # AI 心理諮詢
 with tab2:
     st.subheader("🤖 AI 心理諮詢")
+
+    # 顯示訊息
     if "messages" not in st.session_state:
         st.session_state.messages = []
     for m in st.session_state.messages:
         with st.chat_message(m["role"]):
             st.markdown(m["content"])
+
+    # ⬇️ 自動觸發 GPT 心理建議
+    if (
+        "auto_intro_sent" in st.session_state
+        and st.session_state.auto_intro_sent
+        and not any(m["content"].startswith("根據您的心理健康評估") for m in st.session_state.messages)
+    ):
+        with st.chat_message("assistant"):
+            stream = client.chat.completions.create(
+                model="gpt-4",
+                messages=[
+                    {"role": "system", "content": construct_psych_context()}
+                ] + st.session_state.messages,
+                stream=True
+            )
+            response = st.write_stream(stream)
+
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": response
+        })
+
+    # ⬇️ 使用者輸入處理
     if prompt := st.chat_input("請輸入您的感受..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
@@ -293,13 +298,13 @@ with tab2:
             stream = client.chat.completions.create(
                model="gpt-4",
                messages=[
-               {"role": "system", "content": construct_psych_context()}
+                   {"role": "system", "content": construct_psych_context()}
                ] + st.session_state.messages,
                stream=True
             )
-
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
+
 
 #心衛資源
 with tab3:
