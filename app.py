@@ -196,24 +196,25 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # 建立初始摘要訊息
     intro = (
-        "以下是使用者的心理健康評估結果摘要：\n"
+        "以下是您的心理健康評估結果摘要：\n"
         f"- 年齡範圍：{st.session_state['age_group']}\n"
         f"- 性別：{st.session_state['gender']}\n"
         f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
-        f"評估中對情緒問題的回答如下：\n"
+        f"您在評估中的回答如下：\n"
     )
     for q, a in st.session_state['responses'].items():
         intro += f"  - {q}：{a}\n"
 
-    # 清除舊訊息並注入強制初始 prompt
-    st.session_state.messages = [
-        {"role": "system", "content": construct_psych_context()},
-        {"role": "user", "content": intro + "\n\n請針對上述心理狀況給我一些溫柔、具體的建議，條列式呈現，繁體中文回應。"}
-    ]
+    # 加入第一則系統訊息
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": intro
+    })
+
 
     st.session_state.auto_intro_sent = True
+
 
 
 # 若為中度或重度患者，顯示 Gmail 填寫表單並寄信
