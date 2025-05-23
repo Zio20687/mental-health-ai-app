@@ -206,7 +206,7 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
 
     # 把開場摘要加到 tab2 的 chat 中（第一則系統訊息）
     st.session_state.messages.append({
-        "role": "assistant", 
+        "role": "user", 
         "content": intro
     })
     st.session_state.auto_intro_sent = True
