@@ -118,7 +118,7 @@ with tab1:
 
             st.markdown(f"### 您的總分為：**{total_score}**")
             st.markdown(f"### 狀態建議：**{level}**")
-
+            
     if "level" in st.session_state:
         st.markdown("---")
         st.subheader("📩 將結果寄到您的 Gmail")
@@ -208,16 +208,7 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     st.session_state.messages.append({
         "role": "user", 
         "content": intro
-        with st.chat_message("assistant"):
-            stream = client.chat.completions.create(
-               model="gpt-4",
-               messages=[
-               {"role": "system", "content": construct_psych_context()}
-               ] + st.session_state.messages,
-               stream=True
-            )
-            response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
+        
     })
     st.session_state.auto_intro_sent = True
 
