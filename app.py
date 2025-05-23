@@ -210,7 +210,11 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
         "content": intro
     })
 
-
+    # 加入模擬使用者訊息，請求 GPT 心理建議
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": "請根據上述心理健康評估結果，給我一些溫柔的心理建議。"
+    })
 
     st.session_state.auto_intro_sent = True
 # 自動回覆心理建議（在 auto_intro_sent 和訊息送出後觸發）
