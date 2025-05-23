@@ -1,5 +1,5 @@
 import streamlit as st
-import mental_health_resources
+import mental_health_resources 
 from openai import OpenAI
 import smtplib
 from email.mime.text import MIMEText
@@ -59,30 +59,6 @@ def construct_psych_context():
             "請避免回答與心理無關的問題，例如財經、遊戲、程式、電腦操作等。"
         )
 
-def notify_counselor():
-    body = f"""⚠️ 心理健康評估結果通知
-
-年齡範圍：{st.session_state['age_group']}
-性別：{st.session_state['gender']}
-
-填答內容：
-"""
-    for q, a in st.session_state['responses'].items():
-        body += f"- {q}：{a}\n"
-    body += f"\n總分：{st.session_state['total_score']}\n建議等級：{st.session_state['level']}\n"
-
-    msg = MIMEText(body, _charset="utf-8")
-    msg["Subject"] = "⚠️ 心理健康評估警示：中度以上情緒困擾"
-    msg["From"] = gmail_address
-    msg["To"] = counselor_email
-
-    try:
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-            server.login(gmail_address, gmail_password)
-            server.send_message(msg)
-        st.info("⚠️ 已自動將結果發送給輔導員。")
-    except Exception as e:
-        st.error(f"❌ 輔導員通知失敗：{e}")
 
 # 分頁
 tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "💖 心衛資源"])
@@ -143,10 +119,138 @@ with tab1:
             st.markdown(f"### 您的總分為：**{total_score}**")
             st.markdown(f"### 狀態建議：**{level}**")
 
-            if total_score >= 10 or suicide_score >= 2:
-                notify_counselor()
+    if "level" in st.session_state:
+        st.markdown("---")
+        st.subheader("📩 將結果寄到您的 Gmail")
+        recipient = st.text_input("請輸入您的 Gmail 信箱")
+        if st.button("將結果寄到 Gmail"):
+            if not recipient or "@gmail.com" not in recipient:
+                st.error("請輸入正確的 Gmail 地址")
+            else:
+                try:
+                    body = f"""您好，
 
-# 心理諮詢
+這是您在心理健康評估系統中的結果：
+
+年齡範圍：{st.session_state['age_group']}
+性別：{st.session_state['gender']}
+
+填答內容：
+"""
+                    for q, a in st.session_state['responses'].items():
+                        body += f"- {q}：{a}\n"
+                    body += f"\n總分：{st.session_state['total_score']}\n結果及建議：{st.session_state['level']}\n\n"
+                    body += """---
+請記得，這個系統僅供輔助用途。如有急迫需求請聯繫心理專業人士。
+祝您平安。心理輔導 AI 系統 敬上"""
+
+                    msg = MIMEText(body, _charset="utf-8")
+                    msg["Subject"] = "心理健康評估結果"
+                    msg["From"] = gmail_address
+                    msg["To"] = recipient
+
+                    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+                        server.login(gmail_address, gmail_password)
+                        server.send_message(msg)
+
+                    st.success("✅ 結果已寄出！請到您的 Gmail 查收。")
+                except Exception as e:
+                    st.error(f"❌ 郵件寄送失敗：{e}")
+                    raise
+
+        if score_mapping[st.session_state["responses"]["過去一星期，是否有自殺的想法？"]] >= 2 or st.session_state["total_score"] >= 10:
+            if st.button("獲取心理資源建議"):
+                st.markdown("""
+                ### ❤️ 緊急心理資源建議
+                我很抱歉，你現在的情況我無法提供足夠的幫助。請撥打下列專線或利用以下資源：
+
+                📞 台灣自殺防治中心：0800-788-995  
+                📞 生命線協談專線：1995  
+                 
+                 #### 🎓 學校心理輔導資源
+                 - **僑光科大諮商輔導中心**  
+                 僑光科大諮商輔導中心網頁:[https://scc.ocu.edu.tw/index.php?Lang=zh-tw](https://scc.ocu.edu.tw/index.php?Lang=zh-tw)
+                 可免費提供學生心理諮詢、情緒調適團體與危機處遇。
+  
+                 你可以透過以下網址預約心理諮詢服務：  
+                 👉[報名預約心理諮商](http://counseling.ocu.edu.tw/index.aspx)     
+                                    
+                請記得：你並不孤單，很多人願意幫助你。
+                """)
+        else:
+            if st.button("獲取音樂推薦"):
+                recommend_music(
+                    st.session_state["level"],
+                    st.session_state["age_group"],
+                    st.session_state["gender"]
+                )
+
+        if st.button("重新開始評估"):
+            st.session_state.reset_flag = True
+            st.rerun()
+
+# 自動傳遞評估摘要給 tab2 輔導開場（只顯示一次）
+if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    intro = (
+        "以下是您的心理健康評估結果摘要：\n"
+        f"- 年齡範圍：{st.session_state['age_group']}\n"
+        f"- 性別：{st.session_state['gender']}\n"
+        f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
+        f"您在評估中的回答如下：\n"
+    )
+    for q, a in st.session_state['responses'].items():
+        intro += f"  - {q}：{a}\n"
+
+    # 把開場摘要加到 tab2 的 chat 中（第一則系統訊息）
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": intro
+    })
+    st.session_state.auto_intro_sent = True
+
+# 若為中度或重度患者，顯示 Gmail 填寫表單並寄信
+if "total_score" in st.session_state:
+    total_score = st.session_state['total_score']
+    suicide_score = score_mapping[st.session_state['responses']["過去一星期，是否有自殺的想法？"]]
+
+    if total_score >= 10 or suicide_score >= 2:
+        with st.expander("⚠️ 你有中度以上情緒困擾，是否願意填寫你的 Gmail？系統將匿名寄給輔導員。"):
+            user_email = st.text_input("📧 請輸入您的 Gmail（選填）", placeholder="example@gmail.com")
+            if st.button("寄送通知給輔導員"):
+                if user_email and user_email.endswith("@gmail.com"):
+                    body = f"""⚠️ 使用者心理健康評估通知
+
+使用者自行填寫了以下 Gmail：{user_email}
+
+年齡範圍：{st.session_state['age_group']}
+性別：{st.session_state['gender']}
+
+填答內容如下：
+"""
+                    for q, a in st.session_state['responses'].items():
+                        body += f"- {q}：{a}\n"
+                    body += f"\n總分：{total_score}\n建議：{st.session_state['level']}\n"
+
+                    msg = MIMEText(body, _charset="utf-8")
+                    msg["Subject"] = "⚠️ 心理健康評估結果通知（使用者自行填寫Gmail）"
+                    msg["From"] = gmail_address
+                    msg["To"] = counselor_email
+
+                    try:
+                        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+                            server.login(gmail_address, gmail_password)
+                            server.send_message(msg)
+                        st.success("✅ 已將通知寄出給輔導員。謝謝您的信任。")
+                    except Exception as e:
+                        st.error(f"❌ 郵件寄送失敗：{e}")
+                else:
+                    st.warning("請輸入正確的 Gmail。")
+
+
+# AI 心理諮詢
 with tab2:
     st.subheader("🤖 AI 心理諮詢")
     if "messages" not in st.session_state:
@@ -166,13 +270,14 @@ with tab2:
                ] + st.session_state.messages,
                stream=True
             )
+
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
-
-# 心衛資源
+#心衛資源
 with tab3:
     st.subheader("💖 心衛資源")
     st.markdown(mental_health_resources.resources_markdown)
+
 
 # 頁尾
 st.markdown("""
