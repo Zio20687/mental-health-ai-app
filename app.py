@@ -121,7 +121,7 @@ with tab1:
     if "level" in st.session_state:
         st.markdown("---")
         st.subheader("📩 將結果寄到您的 Gmail")
-        recipient = st.text_input("請輸入您的 Gmail 信箱")
+        recipient = st.text_input("請輸入您的 Gmail 信箱", placeholder="example@gmail.com")
         if st.button("將結果寄到 Gmail"):
             if not recipient or "@gmail.com" not in recipient:
                 st.error("請輸入正確的 Gmail 地址")
