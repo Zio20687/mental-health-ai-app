@@ -59,7 +59,8 @@ def construct_psych_context():
             "請避免回答與心理無關的問題，例如財經、遊戲、程式、電腦操作等。"
         )
 
-
+query_params = st.experimental_get_query_params()
+active_tab = query_params.get("tab", ["tab1"])[0]
 # 分頁
 tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "💖 心衛資源"])
 # 讓 tab 對應變數，方便後續控制
