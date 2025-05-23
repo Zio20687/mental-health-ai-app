@@ -18,7 +18,7 @@ def get_openai_client():
     )
 client = get_openai_client()
 
-# 音樂推薦函數函數
+# 音樂推薦函數
 def recommend_music(level, age_group, gender):
     with st.spinner("正在搜尋適合的歌曲，請稍候..."):
         try:
