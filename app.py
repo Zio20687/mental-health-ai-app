@@ -280,6 +280,26 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     })
 
     st.session_state.auto_intro_sent = True
+# 自動回覆心理建議（在 auto_intro_sent 和訊息送出後觸發）
+if (
+    "auto_intro_sent" in st.session_state
+    and st.session_state.auto_intro_sent
+    and not any(m["content"].startswith("根據您的心理健康評估") for m in st.session_state.messages)
+):
+    with st.chat_message("assistant"):
+        stream = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": construct_psych_context()}
+            ] + st.session_state.messages,
+            stream=True
+        )
+        response = st.write_stream(stream)
+
+    st.session_state.messages.append({
+        "role": "assistant",
+        "content": response
+    })
 
 #心衛資源
 with tab3:
