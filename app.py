@@ -189,35 +189,6 @@ with tab1:
             st.session_state.reset_flag = True
             st.rerun()
 
-# 自動傳遞評估摘要給 tab2 輔導開場（只顯示一次）
-if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-
-    intro = (
-        "以下是您的心理健康評估結果摘要：\n"
-        f"- 年齡範圍：{st.session_state['age_group']}\n"
-        f"- 性別：{st.session_state['gender']}\n"
-        f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
-        f"您在評估中的回答如下：\n"
-    )
-    for q, a in st.session_state['responses'].items():
-        intro += f"  - {q}：{a}\n"
-
-    # 加入第一則系統訊息
-    st.session_state.messages.append({
-        "role": "assistant", 
-        "content": intro
-    })
-
-    # 加入模擬使用者訊息，請求 GPT 心理建議
-    st.session_state.messages.append({
-        "role": "user", 
-        "content": "請根據上述心理健康評估結果，給我一些溫柔的心理建議。"
-    })
-
-    st.session_state.auto_intro_sent = True
-
 # 若為中度或重度患者，顯示 Gmail 填寫表單並寄信
 if "total_score" in st.session_state:
     total_score = st.session_state['total_score']
@@ -280,6 +251,35 @@ with tab2:
 
             response = st.write_stream(stream)
         st.session_state.messages.append({"role": "assistant", "content": response})
+        
+# 自動傳遞評估摘要給 tab2 輔導開場（只顯示一次）
+if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    intro = (
+        "以下是您的心理健康評估結果摘要：\n"
+        f"- 年齡範圍：{st.session_state['age_group']}\n"
+        f"- 性別：{st.session_state['gender']}\n"
+        f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
+        f"您在評估中的回答如下：\n"
+    )
+    for q, a in st.session_state['responses'].items():
+        intro += f"  - {q}：{a}\n"
+
+    # 加入第一則系統訊息
+    st.session_state.messages.append({
+        "role": "assistant", 
+        "content": intro
+    })
+
+    # 加入模擬使用者訊息，請求 GPT 心理建議
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": "請根據上述心理健康評估結果，給我一些溫柔的心理建議。"
+    })
+
+    st.session_state.auto_intro_sent = True
 
 #心衛資源
 with tab3:
