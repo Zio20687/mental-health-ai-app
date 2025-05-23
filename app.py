@@ -204,27 +204,18 @@ if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     for q, a in st.session_state['responses'].items():
         intro += f"  - {q}：{a}\n"
 
-    # 把開場摘要加到 chat 訊息中（第一則）
+    # 加入第一則系統訊息
     st.session_state.messages.append({
-        "role": "user", 
+        "role": "assistant", 
         "content": intro
     })
 
-    # 🔁 呼叫 GPT-4 API，自動生成 AI 回覆
-    try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": "你是一位溫柔的心理諮詢師，請根據使用者的心理健康摘要提供同理、接納並引導對話的開場白。"},
-                {"role": "user", "content": intro}
-            ]
-        )
+    # 加入模擬使用者訊息，請求 GPT 心理建議
+    st.session_state.messages.append({
+        "role": "user", 
+        "content": "請根據上述心理健康評估結果，給我一些溫柔的心理建議。"
+    })
 
-        ai_reply = response['choices'][0]['message']['content']
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": ai_reply
-        })
     st.session_state.auto_intro_sent = True
 
 # 若為中度或重度患者，顯示 Gmail 填寫表單並寄信
