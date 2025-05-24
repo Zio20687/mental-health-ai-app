@@ -191,29 +191,41 @@ with tab1:
             st.session_state.reset_flag = True
             st.rerun()
 
-# 自動傳遞評估摘要給 tab2 輔導開場（只顯示一次）
+# ✅ 自動傳遞評估摘要給 Tab2 並觸發建議（只做一次）
 if "auto_intro_sent" not in st.session_state and "level" in st.session_state:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    intro = (
-        "以下是您的心理健康評估結果摘要：\n"
+    # 建立摘要內容
+    summary = (
+        f"以下是使用者的心理健康評估結果摘要：\n"
         f"- 年齡範圍：{st.session_state['age_group']}\n"
         f"- 性別：{st.session_state['gender']}\n"
         f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
-        f"您在評估中的回答如下：\n"
+        f"評估中對情緒問題的回答如下：\n"
     )
     for q, a in st.session_state['responses'].items():
-        intro += f"  - {q}：{a}\n"
+        summary += f"  - {q}：{a}\n"
+    summary += "\n請給我一些溫柔且具體的建議，條列式呈現，繁體中文回應。"
 
-    # 加入第一則系統訊息
+    # 發送給 GPT 取得建議
+    with st.spinner("AI 正在生成建議中..."):
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": construct_psych_context()},
+                {"role": "user", "content": summary}
+            ]
+        )
+        reply = response.choices[0].message.content.strip()
+
+    # 儲存顯示訊息（僅顯示 GPT 回覆）
     st.session_state.messages.append({
-        "role": "assistant", 
-        "content": intro
+        "role": "assistant",
+        "content": reply
     })
-
-
     st.session_state.auto_intro_sent = True
+
 
 
 
@@ -262,37 +274,24 @@ with tab2:
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # ✅ 自動注入心理健康摘要一次（僅在 tab2 開啟時觸發）
+    chat_container = st.container()
+    input_container = st.container()
+
+    # ✅ 顯示歷史訊息
+    with chat_container:
+        for m in st.session_state.messages:
+            if m["content"].strip() == "請根據上述心理健康評估結果，給我一些溫柔的心理建議，並且也可以去參考台灣自殺防治學會的相關資訊。":
+                continue  # 跳過顯示該訊息
+            with st.chat_message(m["role"]):
+                st.markdown(m["content"])
+
+    # ✅ 自動觸發 GPT 心理建議
     if (
-        "level" in st.session_state and
-        not st.session_state.get("auto_intro_sent", False)
+        "auto_intro_sent" in st.session_state and
+        st.session_state.auto_intro_sent and
+        not any("請根據上述心理健康評估結果" in m["content"] for m in st.session_state.messages)
     ):
-        intro = (
-            "以下是您的心理健康評估結果摘要：\n"
-            f"- 年齡範圍：{st.session_state['age_group']}\n"
-            f"- 性別：{st.session_state['gender']}\n"
-            f"- 總分：{st.session_state['total_score']}，建議：{st.session_state['level']}\n\n"
-            f"您在評估中的回答如下：\n"
-        )
-        for q, a in st.session_state['responses'].items():
-            intro += f"  - {q}：{a}\n"
-
-        st.session_state.messages.append({"role": "assistant", "content": intro})
-        st.session_state.messages.append({"role": "user", "content": "請根據上述心理健康評估結果，給我一些溫柔的心理建議。"})
-        st.session_state.auto_intro_sent = True
-
-    # ✅ 顯示訊息
-    for m in st.session_state.messages:
-        with st.chat_message(m["role"]):
-            st.markdown(m["content"])
-
-    # ✅ 使用者輸入（保持在底部）
-    prompt = st.chat_input("請輸入您的感受...")
-    if prompt:
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
-        with st.chat_message("assistant"):
+        with chat_container.chat_message("assistant"):
             stream = client.chat.completions.create(
                 model="gpt-4",
                 messages=[
@@ -301,14 +300,34 @@ with tab2:
                 stream=True
             )
             response = st.write_stream(stream)
-        st.session_state.messages.append({"role": "assistant", "content": response})
 
-    # ✅ 強制滾到底部
-    st.markdown("""
-        <script>
-            window.scrollTo(0, document.body.scrollHeight);
-        </script>
-    """, unsafe_allow_html=True)
+        st.session_state.messages.append({
+            "role": "assistant",
+            "content": response
+        })
+
+    # ✅ 使用者輸入區域永遠固定在底部
+    with input_container:
+        prompt = st.chat_input("請輸入您的感受...")
+        if prompt:
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with chat_container.chat_message("user"):
+                st.markdown(prompt)
+
+            with chat_container.chat_message("assistant"):
+                stream = client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": construct_psych_context()}
+                    ] + st.session_state.messages,
+                    stream=True
+                )
+                response = st.write_stream(stream)
+
+            st.session_state.messages.append({
+                "role": "assistant",
+                "content": response
+            })
 
 
 #心衛資源
