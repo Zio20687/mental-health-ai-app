@@ -65,6 +65,7 @@ tab1, tab2, tab3 = st.tabs(["📝 心理健康評估", "🤖 AI 心理諮詢", "
 
 with tab1:
     st.title("📝心理健康評估 及 音樂推薦")
+    st.markdown("<div style='color: gray; font-size: 12pt;'>⚠️聲明:本次填答表單之內容僅供這次分析使用，基於個資法不會拿去做其他用途之使用。</div>", unsafe_allow_html=True)
 
     age_group = st.selectbox("請選擇您的年齡範圍：", ["請選擇", "14歲(含)以下", "15~24歲", "25~44歲", "45~64歲", "65歲(含)以上"])
     gender = st.selectbox("請選擇您的性別：", ["請選擇", "男", "女"])
